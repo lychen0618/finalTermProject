@@ -14,8 +14,9 @@ x_test = x_test * 1.0 / 127.5 - 1
 print("data load finish")
 # Training Parameters
 learning_rate = 0.001
-num_steps = 2000
+num_steps = 1800
 batch_size = 100
+num_epochs = 10
 
 # Network Parameters
 num_input = 7500  # MNIST data input (img shape: 28*28)
@@ -110,9 +111,18 @@ print('Done training!')
 
 # Evaluate the Model
 # Define the input function for evaluating
-input_fn = tf.estimator.inputs.numpy_input_fn(
-    x={'images': x_test}, y=y_test,
-    batch_size=batch_size, shuffle=False)
-# Use the Estimator 'evaluate' method
-print(model.evaluate(input_fn))
+# input_fn = tf.estimator.inputs.numpy_input_fn(
+#     x={'images': x_test}, y=y_test,
+#     batch_size=batch_size, shuffle=False)
+# # Use the Estimator 'evaluate' method
+# print('total accuracy: {}'.format(model.evaluate(input_fn)['accuracy']))
+
+for c in np.nditer(np.unique(y_test)):
+    x_temp = np.array([x_test[i] for i in range(0, len(y_test)) if y_test[i] == c])
+    y_temp = np.zeros((x_temp.shape[0],), dtype=np.int) + c
+    input_fn = tf.estimator.inputs.numpy_input_fn(
+        x={'images': x_temp}, y=y_temp,
+        batch_size=batch_size, shuffle=False)
+    print('class{} accuracy: {}'.format(c, model.evaluate(input_fn)['accuracy']))
+
 print('Done exporting!')
