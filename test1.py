@@ -4,24 +4,25 @@ import os
 from os.path import join as pjoin
 print(tf.__version__)
 
-x_train = np.load("./info/x_train.npy")
-y_train = np.load("./info/y_train.npy")
-x_test = np.load("./info/x_test.npy")
-y_test = np.load("./info/y_test.npy")
+x_train = np.load("./info/task1/x_train.npy")
+y_train = np.load("./info/task1/y_train.npy")
+x_test = np.load("./info/task1/x_test.npy")
+y_test = np.load("./info/task1/y_test.npy")
 
 x_train = x_train * 1.0 / 127.5 - 1
 x_test = x_test * 1.0 / 127.5 - 1
 print("data load finish")
 # Training Parameters
-learning_rate = 0.001
-num_steps = 1800
-batch_size = 100
+learning_rate = 0.0001
+num_steps = 1000
+
+batch_size = 64
 num_epochs = 10
 
 # Network Parameters
 num_input = 7500  # MNIST data input (img shape: 28*28)
-num_classes = 15  # MNIST total classes (0-9 digits)
-dropout = 0.5  # Dropout, probability to drop a unit
+num_classes = 3  # MNIST total classes (0-9 digits)
+dropout = 0.25  # Dropout, probability to drop a unit
 
 
 # Create the neural network
@@ -42,7 +43,7 @@ def conv_net(x_dict, n_classes, dropout, reuse, is_training):
         conv1 = tf.layers.max_pooling2d(conv1, 2, 2)
 
         # Convolution Layer with 64 filters and a kernel size of 3
-        conv2 = tf.layers.conv2d(conv1, 64, 3, activation=tf.nn.relu)
+        conv2 = tf.layers.conv2d(conv1, 64, 5, activation=tf.nn.relu)
         # Max Pooling (down-sampling) with strides of 2 and kernel size of 2
         conv2 = tf.layers.max_pooling2d(conv2, 2, 2)
 
@@ -50,7 +51,7 @@ def conv_net(x_dict, n_classes, dropout, reuse, is_training):
         fc1 = tf.contrib.layers.flatten(conv2)
 
         # Fully connected layer (in tf contrib folder for now)
-        fc1 = tf.layers.dense(fc1, 1024)
+        fc1 = tf.layers.dense(fc1, 512)
         # Apply Dropout (if is_training is False, dropout is not applied)
         fc1 = tf.layers.dropout(fc1, rate=dropout, training=is_training)
 
@@ -111,11 +112,11 @@ print('Done training!')
 
 # Evaluate the Model
 # Define the input function for evaluating
-# input_fn = tf.estimator.inputs.numpy_input_fn(
-#     x={'images': x_test}, y=y_test,
-#     batch_size=batch_size, shuffle=False)
-# # Use the Estimator 'evaluate' method
-# print('total accuracy: {}'.format(model.evaluate(input_fn)['accuracy']))
+input_fn = tf.estimator.inputs.numpy_input_fn(
+    x={'images': x_test}, y=y_test,
+    batch_size=batch_size, shuffle=False)
+# Use the Estimator 'evaluate' method
+print('total accuracy: {}'.format(model.evaluate(input_fn)['accuracy']))
 
 for c in np.nditer(np.unique(y_test)):
     x_temp = np.array([x_test[i] for i in range(0, len(y_test)) if y_test[i] == c])

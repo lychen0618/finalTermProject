@@ -1,0 +1,4 @@
+/venv/
+/mnist/
+/fabric_data/
+/.idea/

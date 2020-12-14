@@ -7,12 +7,13 @@ print(tf.__version__)
 
 
 
-x_train = np.load("./info/x_train.npy").reshape([6300, 7500])
-y_train = np.load("./info/y_train.npy")
+x_train = np.load("./info/task1/x_train.npy").reshape([1500, 7500])
+y_train = np.load("./info/task1/y_train.npy")
 y_train = tf.keras.utils.to_categorical(y_train)
 
-x_test = np.load("./info/x_test.npy").reshape([2700, 7500])
-y_test = np.load("./info/y_test.npy")
+# 445
+x_test = np.load("./info/task1/x_test.npy").reshape([289, 7500])
+y_test = np.load("./info/task1/y_test.npy")
 y_test = tf.keras.utils.to_categorical(y_test)
 
 
@@ -23,16 +24,16 @@ print("data load finish")
 # Parameters
 learning_rate = 0.01
 training_epochs = 500
-batch_size = 6300
+batch_size = 1500
 display_step = 1
 
 # tf Graph Input
 x = tf.placeholder(tf.float32, [None, 7500]) # mnist data image of shape 28*28=784
-y = tf.placeholder(tf.float32, [None, 15]) # 0-9 digits recognition => 10 classes
+y = tf.placeholder(tf.float32, [None, 3]) # 0-9 digits recognition => 10 classes
 
 # Set model weights
-W = tf.Variable(tf.zeros([7500, 15]))
-b = tf.Variable(tf.zeros([15]))
+W = tf.Variable(tf.zeros([7500, 3]))
+b = tf.Variable(tf.zeros([3]))
 
 # Construct model
 pred = tf.nn.softmax(tf.matmul(x, W) + b) # Softmax
