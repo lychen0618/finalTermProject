@@ -6,7 +6,6 @@ import PIL
 from PIL import Image
 import tensorflow as tf
 import matplotlib.pyplot as plt
-print(tf.__version__)
 
 # Randomly flip an image.
 def random_flip_left_right(image):
@@ -60,6 +59,8 @@ def tf_rotate(input_image, min_angle = -np.pi/2, max_angle = np.pi/2):
 # Apply all transformations to an image.
 # That is a common image augmentation technique for image datasets, such as ImageNet.
 def transform_image(image):
+    if random.randint(1, 3) == 2:
+        image = image.transpose((1, 0, 2))
     image = random_flip_left_right(image)
     image = random_flip_up_down(image)
     if random.randint(1, 21) == 11:

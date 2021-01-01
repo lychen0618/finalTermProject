@@ -2,26 +2,28 @@ import numpy as np
 import tensorflow as tf
 import os
 from os.path import join as pjoin
+
 print(tf.__version__)
 
-x_train = np.load("./info/task1/x_train.npy")
-y_train = np.load("./info/task1/y_train.npy")
-x_test = np.load("./info/task1/x_test.npy")
-y_test = np.load("./info/task1/y_test.npy")
+x_train = np.load("./info/task2/x_train.npy")
+y_train = np.load("./info/task2/y_train.npy")
+x_test = np.load("./info/task2/x_test.npy")
+y_test = np.load("./info/task2/y_test.npy")
 
 x_train = x_train * 1.0 / 127.5 - 1
 x_test = x_test * 1.0 / 127.5 - 1
 print("data load finish")
 # Training Parameters
-learning_rate = 0.0001
+learning_rate = 0.0005
 num_steps = 1000
 
 batch_size = 64
 num_epochs = 10
+tf.logging.set_verbosity(tf.logging.INFO)
 
 # Network Parameters
 num_input = 7500  # MNIST data input (img shape: 28*28)
-num_classes = 3  # MNIST total classes (0-9 digits)
+num_classes = 5  # MNIST total classes (0-9 digits)
 dropout = 0.25  # Dropout, probability to drop a unit
 
 
@@ -42,16 +44,20 @@ def conv_net(x_dict, n_classes, dropout, reuse, is_training):
         # Max Pooling (down-sampling) with strides of 2 and kernel size of 2
         conv1 = tf.layers.max_pooling2d(conv1, 2, 2)
 
-        # Convolution Layer with 64 filters and a kernel size of 3
+        # Convolution Layer with 64 filters and a kernel size of 5
         conv2 = tf.layers.conv2d(conv1, 64, 5, activation=tf.nn.relu)
         # Max Pooling (down-sampling) with strides of 2 and kernel size of 2
         conv2 = tf.layers.max_pooling2d(conv2, 2, 2)
 
+        conv3 = tf.layers.conv2d(conv2, 128, 5, activation=tf.nn.relu)
+        # Max Pooling (down-sampling) with strides of 2 and kernel size of 2
+        conv3 = tf.layers.max_pooling2d(conv3, 2, 2)
+
         # Flatten the data to a 1-D vector for the fully connected layer
-        fc1 = tf.contrib.layers.flatten(conv2)
+        fc1 = tf.contrib.layers.flatten(conv3)
 
         # Fully connected layer (in tf contrib folder for now)
-        fc1 = tf.layers.dense(fc1, 512)
+        fc1 = tf.layers.dense(fc1, 1024)
         # Apply Dropout (if is_training is False, dropout is not applied)
         fc1 = tf.layers.dropout(fc1, rate=dropout, training=is_training)
 
@@ -77,15 +83,14 @@ def model_fn(features, labels, mode):
     if mode == tf.estimator.ModeKeys.PREDICT:
         return tf.estimator.EstimatorSpec(mode, predictions=pred_classes)
 
-        # Define loss and optimizer
+    # Define loss and optimizer
     loss_op = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(
-        logits=logits_train, labels=tf.cast(labels, dtype=tf.int32)))
+        logits=logits_train, labels=tf.cast(labels, dtype=tf.int32)), name='loss')
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
     train_op = optimizer.minimize(loss_op, global_step=tf.train.get_global_step())
 
     # Evaluate the accuracy of the model
     acc_op = tf.metrics.accuracy(labels=labels, predictions=pred_classes)
-
     # TF Estimators requires to return a EstimatorSpec, that specify
     # the different ops for training, evaluating, ...
     estim_specs = tf.estimator.EstimatorSpec(
@@ -100,13 +105,17 @@ def model_fn(features, labels, mode):
 
 print('Training model...')
 # Build the Estimator
-model = tf.estimator.Estimator(model_fn)
+
+model = tf.estimator.Estimator(model_fn, model_dir="./log/task2/",
+                               config=tf.estimator.RunConfig(save_summary_steps=10, keep_checkpoint_max=1,
+                                                             log_step_count_steps=10))
 
 # Define the input function for training
 input_fn = tf.estimator.inputs.numpy_input_fn(
     x={'images': x_train}, y=y_train,
     batch_size=batch_size, num_epochs=None, shuffle=True)
 # Train the Model
+
 model.train(input_fn, steps=num_steps)
 print('Done training!')
 
